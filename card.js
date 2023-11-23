@@ -1,5 +1,12 @@
 import Shape from "./shape";
 
+const grey = { r: 127, g: 127, b: 127, a: 1 };
+const red = { r: 200, g: 0, b: 0, a: 1 };
+const green = { r: 0, g: 200, b: 0, a: 1 };
+const purple = { r: 100, g: 0, b: 100, a: 1 };
+const colors = [green, red, purple];
+
+
 class Card {
   static width = 50;
   static height = 80;
@@ -7,15 +14,15 @@ class Card {
   static render_offset = 5;
   static backgroundColor = "rgba(180, 180, 180, 1)";
 
-  constructor(count, color, fillType, shape) {
-    Object.assign(this, { count, color, fillType, shape });
+  constructor(count, color_index, fillType, shape) {
+    Object.assign(this, { count, color_index, fillType, shape });
     this.x = 0;
     this.y = 0;
 
     this.shapeSprites = [];
     for (let i = 0; i < count; i++) {
       this.shapeSprites.push(
-        new Shape(this.x, this.y + i * Card.spacer, { color, fillType, shape })
+        new Shape(this.x, this.y + i * Card.spacer, { color: colors[color_index], fillType, shape })
       );
     }
   }

@@ -44,7 +44,7 @@ class Deck extends Array {
       Object.values(ShapeType).forEach((shapeType) => {
         Object.values(FillType).forEach((fillType) => {
           [1, 2, 3].forEach((count) => {
-            let card = new Card(count, color, fillType, shapeType, {});
+            let card = new Card(count, c_index, fillType, shapeType, {});
             card.setPos(0, 0);
             card.draw(ctx);
             this.push(card);
@@ -56,7 +56,7 @@ class Deck extends Array {
 
   static debug() {
     let d = [];
-     colors.forEach((color, c_index) => {
+    colors.forEach((color, c_index) => {
       let color_x = c_index * 300;
       Object.values(ShapeType).forEach((shapeType) => {
         let shape_y = shapeType * 300;
@@ -74,10 +74,21 @@ class Deck extends Array {
     return d;
   }
 }
+
+// class Game {
+//   constructor() {
+//     this.deck = new Deck();
+//     this.score = 0;
+//     this.selected = [];
+//   }
+// }
+// let game = new Game();
+
+let score = 0;
 let d = new Deck();
-d = Deck.debug();
 let table = [];
 let table_index = 0;
+let selected = [];
 
 let secondsPassed = 0;
 let oldTimeStamp = 0;
@@ -145,6 +156,13 @@ function draw() {
       ctx.fillStyle = "cyan";
       ctx.fill();
     }
+    if (c.selected) {
+      ctx.beginPath();
+      ctx.rect(c.x - 5, c.y - 5, Card.width + 10, Card.height + 10);
+      ctx.closePath();
+      ctx.fillStyle = "orange";
+      ctx.fill();
+    }
     c.draw(ctx);
   });
 
@@ -187,12 +205,8 @@ function drawTime(ctx) {
     canvas.width - 175,
     75
   );
-  // ctx.fillText("{ " + d[10].x + ", " + d[10].y + " }", canvas.width - 175, 100);
-  // ctx.fillText(
-  //   "{ " + (d[10].x + Card.width) + ", " + (d[10].y + Card.height) + " }",
-  //   canvas.width - 175,
-  //   120
-  // );
+  ctx.fillText("score: " + score, canvas.width - 100, 75);
+  ctx.fillText("selected: " + selected, canvas.width - 400, 100);
   ctx.restore();
 }
 
@@ -227,11 +241,53 @@ window.addEventListener("mousemove", (e) => {
 });
 
 window.addEventListener("mousedown", (e) => {
+  // if (selected.length > 3) {
+  //   let removed = selected.splice(0, selected.length - 3);
+  //   removed.forEach(card => {
+  //     card.selected = false;
+  //   })
+  //   return;
+  // } else if (selected.length === 3) {
+  //   return;
+  // }
+  table.forEach((card, idx) => {
+    if (card.highlight) {
+      if (!card.selected) {
+        card.selected = true;
+        selected.push(idx);
+        if (selected.length === 3) {
+          let cards = selected.map((i) => {
+            return table[i];
+          });
+          console.log(isSet(cards));
+          if (
+            isSet(
+              selected.map((i) => {
+                return table[i];
+              })
+            )
+          ) {
+            console.log("a set!");
+          } else {
+            console.log("bad");
+          }
+        }
+        return;
+      } else {
+        card.selected = false;
+        let i = selected.indexOf(idx);
+        selected.splice(i, 1);
+        return;
+      }
+    }
+  });
+
   buttons.forEach((butt) => {
     if (butt.highlight) {
       if (butt.text === "shuffle") {
         console.log("running shuffle");
         d = shuffle(d);
+        return;
       } else {
         console.log("drawing");
         let c = d.pop();
@@ -240,9 +296,34 @@ window.addEventListener("mousedown", (e) => {
         let y = 120 * Math.floor(table.length / 4) + 120;
         c.setPos(x, y);
         table.push(c);
-
-        // ((table.length % 5) + 1);
+        return;
       }
     }
   });
 });
+
+const PropType = Object.freeze({
+  Suit: "shape",
+  Color: "color_index",
+  Count: "count",
+  Fill: "fillType",
+});
+function isSet(sel) {
+  console.log("checking set ", sel);
+  if (sel.length > 3) {
+    console.error("too many!");
+    return;
+  }
+  return Object.values(PropType).every((propType) => {
+    let matchSum = 0;
+    sel.forEach((c) => {
+      matchSum += c[propType];
+    });
+
+    if (matchSum % 3 !== 0) {
+      console.log("matchSum for " + propType + " is " + matchSum);
+      return false;
+    }
+    return true;
+  });
+}
