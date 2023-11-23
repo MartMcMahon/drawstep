@@ -1,11 +1,5 @@
+import colors from "./colors";
 import Shape from "./shape";
-
-const grey = { r: 127, g: 127, b: 127, a: 1 };
-const red = { r: 200, g: 0, b: 0, a: 1 };
-const green = { r: 0, g: 200, b: 0, a: 1 };
-const purple = { r: 100, g: 0, b: 100, a: 1 };
-const colors = [green, red, purple];
-
 
 class Card {
   static width = 50;
@@ -22,7 +16,11 @@ class Card {
     this.shapeSprites = [];
     for (let i = 0; i < count; i++) {
       this.shapeSprites.push(
-        new Shape(this.x, this.y + i * Card.spacer, { color: colors[color_index], fillType, shape })
+        new Shape(this.x, this.y + i * Card.spacer, {
+          color: colors[color_index],
+          fillType,
+          shape,
+        })
       );
     }
   }
@@ -33,6 +31,12 @@ class Card {
       shape.x = x + Card.render_offset;
       shape.y = y + i * Card.spacer + Card.render_offset;
     });
+  }
+
+  setTableIndex(i) {
+    let x = 120 * (i % 4) + 250;
+    let y = 120 * Math.floor(i / 4) + 120;
+    this.setPos(x, y);
   }
 
   draw(ctx) {
@@ -70,6 +74,12 @@ class Card {
       shape.draw(ctx);
       shape.ink(ctx);
     });
+  }
+
+  static Back() {
+    let c = new Card(0, 0, 0, 0);
+    c.shapeSprites = [];
+    return c;
   }
 }
 export default Card;

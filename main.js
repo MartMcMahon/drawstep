@@ -1,5 +1,6 @@
+// import colors from "./colors";
 import Card from "./card";
-import { FillType, ShapeType } from "./shape";
+import Deck from "./deck";
 import "./style.css";
 
 let canvas = document.createElement("canvas");
@@ -7,12 +8,6 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 document.querySelector("#app").appendChild(canvas);
 let ctx = canvas.getContext("2d");
-
-const grey = { r: 127, g: 127, b: 127, a: 1 };
-const red = { r: 200, g: 0, b: 0, a: 1 };
-const green = { r: 0, g: 200, b: 0, a: 1 };
-const purple = { r: 100, g: 0, b: 100, a: 1 };
-const colors = [green, red, purple];
 
 let buttons = [];
 
@@ -37,44 +32,6 @@ function shuffle(array) {
   return array;
 }
 
-class Deck extends Array {
-  constructor() {
-    super();
-    colors.forEach((color, c_index) => {
-      Object.values(ShapeType).forEach((shapeType) => {
-        Object.values(FillType).forEach((fillType) => {
-          [1, 2, 3].forEach((count) => {
-            let card = new Card(count, c_index, fillType, shapeType, {});
-            card.setPos(0, 0);
-            card.draw(ctx);
-            this.push(card);
-          });
-        });
-      });
-    });
-  }
-
-  static debug() {
-    let d = [];
-    colors.forEach((color, c_index) => {
-      let color_x = c_index * 300;
-      Object.values(ShapeType).forEach((shapeType) => {
-        let shape_y = shapeType * 300;
-        Object.values(FillType).forEach((fillType) => {
-          let fill_x = fillType * 100;
-          [1, 2, 3].forEach((count) => {
-            let card = new Card(count, color, fillType, shapeType, {});
-            card.setPos(color_x + fill_x, shape_y + (count - 1) * 100);
-            card.draw(ctx);
-            d.push(card);
-          });
-        });
-      });
-    });
-    return d;
-  }
-}
-
 // class Game {
 //   constructor() {
 //     this.deck = new Deck();
@@ -84,11 +41,11 @@ class Deck extends Array {
 // }
 // let game = new Game();
 
-let score = 0;
 let d = new Deck();
 let table = [];
 let table_index = 0;
 let selected = [];
+let trophies = [];
 
 let secondsPassed = 0;
 let oldTimeStamp = 0;
@@ -205,9 +162,34 @@ function drawTime(ctx) {
     canvas.width - 175,
     75
   );
-  ctx.fillText("score: " + score, canvas.width - 100, 75);
+  ctx.fillText("score: " + trophies.length, canvas.width - 100, 75);
   ctx.fillText("selected: " + selected, canvas.width - 400, 100);
   ctx.restore();
+}
+
+function tableStateUpdate() {
+  if (selected.length === 3) {
+    let cards = selected.map((i) => {
+      return table[i];
+    });
+    // console.log(isSet(cards));
+    if (isSet(cards)) {
+      console.log("a set!");
+      for (let x = 0; x < cards.length; x++) {
+        trophies.push(cards[x]);
+        let newCard = d.pop();
+        // debugger;
+        newCard.setTableIndex(selected[x]);
+        console.log('selected', selected)
+        // debugger;
+        table[selected[x]] = newCard;
+        // debugger;
+      }
+        selected = [];
+    } else {
+      console.log("bad");
+    }
+  }
 }
 
 window.addEventListener("mousemove", (e) => {
@@ -255,23 +237,6 @@ window.addEventListener("mousedown", (e) => {
       if (!card.selected) {
         card.selected = true;
         selected.push(idx);
-        if (selected.length === 3) {
-          let cards = selected.map((i) => {
-            return table[i];
-          });
-          console.log(isSet(cards));
-          if (
-            isSet(
-              selected.map((i) => {
-                return table[i];
-              })
-            )
-          ) {
-            console.log("a set!");
-          } else {
-            console.log("bad");
-          }
-        }
         return;
       } else {
         card.selected = false;
@@ -281,6 +246,8 @@ window.addEventListener("mousedown", (e) => {
       }
     }
   });
+
+  tableStateUpdate();
 
   buttons.forEach((butt) => {
     if (butt.highlight) {
