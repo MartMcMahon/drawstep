@@ -17,7 +17,7 @@ class Shape {
     this.shape = params.shape || ShapeType.Diamond;
     this.fillType = params.fillType || FillType.Empty;
 
-    console.log(this);
+    // console.log(this);
   }
 
   draw(ctx) {
@@ -70,31 +70,35 @@ class Shape {
 class Card {
   static padding_space = 10;
 
-  constructor(count, color, fill_type, shape) {
-    Object.assign(this, { count, color, fill_type, shape });
+  constructor(count, color, fillType, shape) {
+    Object.assign(this, { count, color, fillType, shape });
+    this.x = 0;
+    this.y = 0;
+
+    let spacer = 30;
+    // console.log(this);
+    this.shapeSprites = [];
+    for (let i = 0; i < count; i++) {
+      this.shapeSprites.push(
+        new Shape(this.x, this.y + i * spacer, { color, fillType, shape })
+      );
+    }
   }
 
-  draw(ctx, x, y) {
-    switch (this.shape) {
-      case Shape.Diamond:
-        for (i = 0; i < count; i++) {
-          drawDiamond(ctx, x, y + i * padding_space, color, fill_type);
-          break;
-        }
-      case Shape.Squiggle:
-        for (i = 0; i < count; i++) {
-          drawSquiggle(ctx, x, y + i * padding_space, color, fill_type);
-          break;
-        }
-      case Shape.Oval:
-        for (i = 0; i < count; i++) {
-          drawOval(ctx, x, y + i * padding_space, color, fill_type);
-          break;
-        }
+  setPos(x, y) {
+    let spacer = 30;
+    Object.assign(this, { x, y });
+    this.shapeSprites.forEach((shape, i) => {
+      shape.x = x;
+      shape.y = y + i * spacer;
+    });
+  }
 
-      default:
-        break;
-    }
+  draw(ctx) {
+    this.shapeSprites.forEach((shape) => {
+      shape.draw(ctx);
+      shape.ink(ctx);
+    });
   }
 }
 
@@ -108,55 +112,29 @@ const grey = { r: 127, g: 127, b: 127, a: 1 };
 const red = { r: 200, g: 0, b: 0, a: 1 };
 const green = { r: 0, g: 200, b: 0, a: 1 };
 const purple = { r: 100, g: 0, b: 100, a: 1 };
+const colors = [green, red, purple];
 const FillType = {
   Empty: 0,
   Shade: 1,
   Full: 2,
 };
 
-let shape = new Shape(100, 100, { color: green, fillType: FillType.Shade });
-shape.draw(ctx);
-shape.ink(ctx);
+colors.forEach((color, c_index) => {
+  let color_x = c_index * 300;
+  Object.values(ShapeType).forEach((shapeType) => {
+    let shape_y = shapeType * 300;
+    Object.values(FillType).forEach((fillType) => {
+      let fill_x = fillType * 100;
+      [1, 2, 3].forEach((count) => {
+        let card = new Card(count, color, fillType, shapeType, {});
+        card.setPos(color_x + fill_x, shape_y + ( count-1 ) * 100);
+        console.log(card.x, card.y);
+        card.draw(ctx);
+       });
+    });
+  });
+});
 
-shape = new Shape(200, 120, {
-  color: red,
-  fillType: FillType.Shade,
-  shape: ShapeType.Squiggle,
-});
-shape.draw(ctx);
-shape.ink(ctx);
-shape = new Shape(200, 150, {
-  color: red,
-  fillType: FillType.Empty,
-  shape: ShapeType.Squiggle,
-});
-shape.draw(ctx);
-shape.ink(ctx);
-shape = new Shape(200, 180, {
-  color: red,
-  fillType: FillType.Full,
-  shape: ShapeType.Squiggle,
-});
-shape.draw(ctx);
-shape.ink(ctx);
-// drawShape(ctx, 100, 100, Shape.Diamond, red, FillType.Empty);
-// drawShape(ctx, 150, 100, Shape.Squiggle, green, FillType.Shade);
-// drawShape(ctx, 200, 100, Shape.Oval, purple, FillType.Full);
-
-// drawOval(ctx, 100, 100, green, 2);
-// ink(ctx, green, 2);
-// for (let i = 0; i < 40; i = i + 4) {
-//   ctx.clearRect(100 + i, 100, 2, 20);
-// }
-// drawOval(ctx, 100, 100, green, 0);
-// ink(ctx, green, 0);
-// drawSquiggle(ctx, 100, 100, purple, 2);
-// ink(ctx, purple, 2);
-// for (let i = 0; i < 40; i = i + 4) {
-//   ctx.clearRect(100 + i, 100, 2, 20);
-// }
-// drawSquiggle(ctx, 100, 100, purple, 0);
-// ink(ctx, red, 0);
 
 function drawOval(ctx, x, y, color, fill_type) {
   let width = 40;
