@@ -39,22 +39,6 @@ function shuffle(array) {
 
 class Deck extends Array {
   constructor() {
-    // colors.forEach((color, c_index) => {
-    //   let color_x = c_index * 300;
-    //   Object.values(ShapeType).forEach((shapeType) => {
-    //     let shape_y = shapeType * 300;
-    //     Object.values(FillType).forEach((fillType) => {
-    //       let fill_x = fillType * 100;
-    //       [1, 2, 3].forEach((count) => {
-    //         let card = new Card(count, color, fillType, shapeType, {});
-    //         card.setPos(color_x + fill_x, shape_y + (count - 1) * 100);
-    //         card.draw(ctx);
-    //         d.push(card);
-    //       });
-    //     });
-    //   });
-    // });
-
     super();
     colors.forEach((color, c_index) => {
       Object.values(ShapeType).forEach((shapeType) => {
@@ -69,8 +53,29 @@ class Deck extends Array {
       });
     });
   }
+
+  static debug() {
+    let d = [];
+     colors.forEach((color, c_index) => {
+      let color_x = c_index * 300;
+      Object.values(ShapeType).forEach((shapeType) => {
+        let shape_y = shapeType * 300;
+        Object.values(FillType).forEach((fillType) => {
+          let fill_x = fillType * 100;
+          [1, 2, 3].forEach((count) => {
+            let card = new Card(count, color, fillType, shapeType, {});
+            card.setPos(color_x + fill_x, shape_y + (count - 1) * 100);
+            card.draw(ctx);
+            d.push(card);
+          });
+        });
+      });
+    });
+    return d;
+  }
 }
 let d = new Deck();
+d = Deck.debug();
 let table = [];
 let table_index = 0;
 
