@@ -25,6 +25,10 @@ class Card {
     }
   }
 
+  static fromServer(o) {
+    return new Card(o.count, o.color_index, o.fillType,o.shape);
+  }
+
   setPos(x, y) {
     Object.assign(this, { x, y });
     this.shapeSprites.forEach((shape, i) => {
@@ -34,8 +38,8 @@ class Card {
   }
 
   setTableIndex(i) {
-    let x = 120 * (i % 4) + 250;
-    let y = 120 * Math.floor(i / 4) + 120;
+    let x = 120 * (i % 3) + 250;
+    let y = 120 * Math.floor(i / 3) + 120;
     this.setPos(x, y);
   }
 

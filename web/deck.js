@@ -20,13 +20,22 @@ class Deck extends Array {
     this.backface = Card.Back;
   }
 
+  static fromServer(o) {
+    let d = new Deck();
+    o.forEach((c, i) => {
+      d[i] = new Card(c.count, c.color_index, c.fillType, c.shape);
+    });
+    return d;
+  }
+
   drawOne() {
     return this.pop();
   }
 
   draw(ctx, x, y) {
-    this.backface.setPos(x, y);
-    this.backface.draw(ctx);
+    let c = Card.Back();
+    c.setPos(x, y);
+    c.draw(ctx);
   }
 
   static debug() {

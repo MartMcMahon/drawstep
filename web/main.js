@@ -1,15 +1,40 @@
-// import colors from "./colors";
+import colors from "./colors";
 import Card from "./card";
 import Deck from "./deck";
 import "./style.css";
+
+////// connection
+let socketUrl = "ws://localhost:8000";
+let ws = new WebSocket(socketUrl);
+console.log(ws);
+ws.onmessage = (e) => {
+  let msg = JSON.parse(e.data);
+  switch (msg.action) {
+    case "newGame":
+      console.log("round trip newGame msg");
+      trophies = [];
+      table = [];
+      d = Deck.fromServer(msg.deck);
+      break;
+    case "players":
+      players = msg.players;
+      break;
+  }
+};
+ws.onopen = (e) => {
+  ws.send(
+    JSON.stringify({
+      action: "id",
+      player: { name: window.location.search, score: 0 },
+    })
+  );
+};
 
 let canvas = document.createElement("canvas");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 document.querySelector("#app").appendChild(canvas);
 let ctx = canvas.getContext("2d");
-
-let buttons = [];
 
 function shuffle(array) {
   console.log(array.length);
@@ -41,11 +66,15 @@ function shuffle(array) {
 // }
 // let game = new Game();
 
+let buttons = [];
 let d = new Deck();
 let table = [];
 let table_index = 0;
 let selected = [];
 let trophies = [];
+let playerId = window.location.search.split("?")[1] || "new";
+let players = {};
+players[playerId] = { name: playerId, score: 0, ws: null };
 
 let secondsPassed = 0;
 let oldTimeStamp = 0;
@@ -67,6 +96,13 @@ let startTime = new Date();
 gameLoop(startTime);
 
 buttons = [
+  {
+    x: canvas.width - 150,
+    y: canvas.height - 300,
+    width: 130,
+    height: 50,
+    text: "new game",
+  },
   {
     x: canvas.width - 150,
     y: canvas.height - 100,
@@ -92,17 +128,19 @@ function update(secondsPassed) {
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  // draw deck ??
-  d.forEach((c) => {
-    if (c.highlight) {
-      ctx.beginPath();
-      ctx.rect(c.x - 5, c.y - 5, Card.width + 10, Card.height + 10);
-      ctx.closePath();
-      ctx.fillStyle = "cyan";
-      ctx.fill();
-    }
-    c.draw(ctx);
-  });
+
+  // // draw deck ??
+  // d.forEach((c) => {
+  //   if (c.highlight) {
+  //     ctx.beginPath();
+  //     ctx.rect(c.x - 5, c.y - 5, Card.width + 10, Card.height + 10);
+  //     ctx.closePath();
+  //     ctx.fillStyle = "cyan";
+  //     ctx.fill();
+  //   }
+  //   c.draw(ctx);
+  // });
+  // d.draw(ctx, 100, 100);
 
   // draw table
   table.forEach((c) => {
@@ -121,6 +159,38 @@ function draw() {
       ctx.fill();
     }
     c.draw(ctx);
+  });
+
+  // draw ui
+  ctx.beginPath();
+  ctx.rect(canvas.width - 200, canvas.height / 4, 200, 200);
+  ctx.closePath();
+  ctx.strokeStyle = "black";
+  ctx.stroke();
+  ctx.fillStyle = "rgba(200, 200, 200, 1)";
+  ctx.fill();
+
+  Object.values(players).forEach((player, i) => {
+    ctx.beginPath();
+    let playerBoxPos = {
+      x: canvas.width - 200 + 5,
+      y: canvas.height / 4 + 5 + i * 30,
+    };
+    ctx.rect(playerBoxPos.x, playerBoxPos.y, 175, 50);
+    ctx.closePath();
+    ctx.strokeStyle = colors.grey;
+    ctx.stroke();
+    ctx.fillStyle = "rgba(150, 105, 150, 1)";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.font = "24px Helvetica";
+    ctx.fillStyle = "black";
+    ctx.fillText(
+      `${player.name}: ${player.score}`,
+      playerBoxPos.x + 5,
+      playerBoxPos.y + 5 + 24
+    );
+    ctx.closePath();
   });
 
   buttons.forEach((butt) => {
@@ -177,15 +247,13 @@ function tableStateUpdate() {
       console.log("a set!");
       for (let x = 0; x < cards.length; x++) {
         trophies.push(cards[x]);
+        players[0].score += 1;
         let newCard = d.pop();
-        // debugger;
         newCard.setTableIndex(selected[x]);
-        console.log('selected', selected)
-        // debugger;
+        console.log("selected", selected);
         table[selected[x]] = newCard;
-        // debugger;
       }
-        selected = [];
+      selected = [];
     } else {
       console.log("bad");
     }
@@ -255,12 +323,20 @@ window.addEventListener("mousedown", (e) => {
         console.log("running shuffle");
         d = shuffle(d);
         return;
+      } else if (butt.text === "new game") {
+        if (ws.readyState === 1) {
+          d = new Deck();
+          d = shuffle(d);
+          ws.send(JSON.stringify({ action: "newGame", deck: d }));
+        } else {
+          console.log("websocket not ready");
+        }
       } else {
         console.log("drawing");
         let c = d.pop();
 
-        let x = 120 * (table.length % 4) + 250;
-        let y = 120 * Math.floor(table.length / 4) + 120;
+        let x = 120 * (table.length % 3) + 250;
+        let y = 120 * Math.floor(table.length / 3) + 120;
         c.setPos(x, y);
         table.push(c);
         return;
