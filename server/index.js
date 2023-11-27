@@ -6,7 +6,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-gameState = { deck: [], players: {} };
+gameState = { deck: [], players: {}, table: [] };
 
 function broadcast(outgoing) {
   wss.clients.forEach((client) => {
@@ -14,6 +14,9 @@ function broadcast(outgoing) {
       client.send(JSON.stringify(outgoing));
     }
   });
+}
+function single(ws, outgoing) {
+  ws.send(JSON.stringify(outgoing));
 }
 
 wss.on("connection", (ws) => {
@@ -25,17 +28,24 @@ wss.on("connection", (ws) => {
 
     switch (msg.action) {
       case "id":
-        let p = gameState.players[msg.player.name] || { name: "new", score: 0 };
-        gameState.players[msg.player.name] = p;
+        // let p = gameState.players[msg.player.name] || msg.player;
+        gameState.players[msg.player.name] = msg.player;
         broadcast({ action: "players", players: gameState.players });
+        console.log(`sending ${gameState.table}`);
+        single(ws, {
+          action: "currentGame",
+          deck: gameState.deck,
+          table: gameState.table,
+        });
         break;
       case "newGame":
         gameState.deck = msg.deck;
-        wss.clients.forEach((client) => {
-          if (client.readyState == WebSocket.OPEN) {
-            client.send(JSON.stringify({ action: "newGame", deck: msg.deck }));
-          }
-        });
+        gameState.table = msg.table;
+        broadcast({ action: "newGame", deck: msg.deck, table: msg.table });
+        break;
+      case "score":
+        let idxs = msg.selected;
+        broadcast({ action: "idxs", idxs });
         break;
     }
   });

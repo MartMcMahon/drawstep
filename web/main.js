@@ -1,7 +1,12 @@
 import colors from "./colors";
 import Card from "./card";
 import Deck from "./deck";
+import Table from "./table";
 import "./style.css";
+
+let playerId = window.location.search.split("?")[1] || "new";
+let players = {};
+players[playerId] = { name: playerId, score: 0 };
 
 ////// connection
 let socketUrl = "ws://localhost:8000";
@@ -13,19 +18,32 @@ ws.onmessage = (e) => {
     case "newGame":
       console.log("round trip newGame msg");
       trophies = [];
-      table = [];
       d = Deck.fromServer(msg.deck);
+      // debugger;
+      table = Table.fromServer(msg.table);
       break;
     case "players":
       players = msg.players;
       break;
+    case "currentGame":
+      d = Deck.fromServer(msg.deck);
+      table = Table.fromServer(msg.table);
+      break;
+    case "table_indexes":
+      // for (let x = 0; x < msg.idxs.length; x++) {
+      msg.idxs.forEach((i) => {
+        let newCard = d.pop();
+        newCard.setTableIndex(i);
+        table[i] = newCard;
+      });
+      selected = [];
   }
 };
 ws.onopen = (e) => {
   ws.send(
     JSON.stringify({
       action: "id",
-      player: { name: window.location.search, score: 0 },
+      player: { name: playerId, score: 0 },
     })
   );
 };
@@ -68,13 +86,9 @@ function shuffle(array) {
 
 let buttons = [];
 let d = new Deck();
-let table = [];
-let table_index = 0;
+let table = new Table();
 let selected = [];
 let trophies = [];
-let playerId = window.location.search.split("?")[1] || "new";
-let players = {};
-players[playerId] = { name: playerId, score: 0, ws: null };
 
 let secondsPassed = 0;
 let oldTimeStamp = 0;
@@ -129,37 +143,8 @@ function update(secondsPassed) {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // // draw deck ??
-  // d.forEach((c) => {
-  //   if (c.highlight) {
-  //     ctx.beginPath();
-  //     ctx.rect(c.x - 5, c.y - 5, Card.width + 10, Card.height + 10);
-  //     ctx.closePath();
-  //     ctx.fillStyle = "cyan";
-  //     ctx.fill();
-  //   }
-  //   c.draw(ctx);
-  // });
-  // d.draw(ctx, 100, 100);
-
   // draw table
-  table.forEach((c) => {
-    if (c.highlight) {
-      ctx.beginPath();
-      ctx.rect(c.x - 5, c.y - 5, Card.width + 10, Card.height + 10);
-      ctx.closePath();
-      ctx.fillStyle = "cyan";
-      ctx.fill();
-    }
-    if (c.selected) {
-      ctx.beginPath();
-      ctx.rect(c.x - 5, c.y - 5, Card.width + 10, Card.height + 10);
-      ctx.closePath();
-      ctx.fillStyle = "orange";
-      ctx.fill();
-    }
-    c.draw(ctx);
-  });
+  table.draw(ctx);
 
   // draw ui
   ctx.beginPath();
@@ -242,18 +227,21 @@ function tableStateUpdate() {
     let cards = selected.map((i) => {
       return table[i];
     });
-    // console.log(isSet(cards));
     if (isSet(cards)) {
       console.log("a set!");
-      for (let x = 0; x < cards.length; x++) {
-        trophies.push(cards[x]);
-        players[0].score += 1;
-        let newCard = d.pop();
-        newCard.setTableIndex(selected[x]);
-        console.log("selected", selected);
-        table[selected[x]] = newCard;
-      }
-      selected = [];
+      // cards.forEach(callbackfn)
+      trophies.splice(trophies.length, 0, cards);
+      // trophies.push(cards[x]);
+      ws.send(JSON.stringify({ action: "score", selected }));
+      // for (let x = 0; x < cards.length; x++) {
+      // players[0].score += 1;
+      // //////////
+      // let newCard = d.pop();
+      // newCard.setTableIndex(selected[x]);
+      // console.log("selected", selected);
+      // table[selected[x]] = newCard;
+      // }
+      // selected = [];
     } else {
       console.log("bad");
     }
@@ -327,23 +315,29 @@ window.addEventListener("mousedown", (e) => {
         if (ws.readyState === 1) {
           d = new Deck();
           d = shuffle(d);
-          ws.send(JSON.stringify({ action: "newGame", deck: d }));
+          for (let i = 0; i < 12; i++) {
+            drawCardToTable(d, table);
+          }
+          ws.send(JSON.stringify({ action: "newGame", deck: d, table }));
         } else {
           console.log("websocket not ready");
         }
       } else {
         console.log("drawing");
-        let c = d.pop();
-
-        let x = 120 * (table.length % 3) + 250;
-        let y = 120 * Math.floor(table.length / 3) + 120;
-        c.setPos(x, y);
-        table.push(c);
+        drawCardToTable(d, table);
         return;
       }
     }
   });
 });
+
+function drawCardToTable(deck, table) {
+  let c = deck.pop();
+  let x = 120 * (table.length % 3) + 250;
+  let y = 120 * Math.floor(table.length / 3) + 120;
+  c.setPos(x, y);
+  table.push(c);
+}
 
 const PropType = Object.freeze({
   Suit: "shape",
