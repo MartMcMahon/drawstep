@@ -63,27 +63,6 @@ canvas.height = window.innerHeight;
 document.querySelector("#app").appendChild(canvas);
 let ctx = canvas.getContext("2d");
 
-function shuffle(array) {
-  console.log(array.length);
-  let m = array.length,
-    t,
-    i;
-
-  // While there remain elements to shuffle…
-  while (m) {
-    // Pick a remaining element…
-    i = Math.floor(Math.random() * m--);
-
-    // And swap it with the current element.
-    t = array[m];
-    array[m] = array[i];
-    array[i] = t;
-  }
-
-  console.log(array.length);
-  return array;
-}
-
 // class Game {
 //   constructor() {
 //     this.deck = new Deck();
