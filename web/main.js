@@ -32,21 +32,10 @@ ws.onmessage = (e) => {
       table = Table.fromServer(msg.table);
       break;
     case "setGot":
-      msg.idxs.forEach((i) => {
-        table[i] = false;
-      });
-      table = table.filter(c=>c);
-      table.forEach((c,i)=>{
-        c.setTableIndex(i)
-      });
-      while (table.length < 12) {
-        let c = deck.pop();
-        c.setTableIndex(table.length);
-        table.push(c);
-      }
-      selected = [];
       players = msg.players;
-      ws.send(JSON.stringify({action: "id", player: {name: playerId}}));
+      table = msg.table;
+      deck = msg.deck;
+      ws.send(JSON.stringify({ action: "id", player: { name: playerId } }));
       break;
 
     // case "table_indexes":
@@ -226,19 +215,25 @@ function tableStateUpdate() {
     });
     if (isSet(cards)) {
       console.log("a set!");
-      // cards.forEach(callbackfn)
       trophies.splice(trophies.length, 0, cards);
-      // trophies.push(cards[x]);
-      ws.send(JSON.stringify({ action: "setGet", playerId, selected }));
-      // for (let x = 0; x < cards.length; x++) {
-      // players[0].score += 1;
-      // //////////
-      // let newCard = d.pop();
-      // newCard.setTableIndex(selected[x]);
-      // console.log("selected", selected);
-      // table[selected[x]] = newCard;
-      // }
-      // selected = [];
+
+      selected.forEach((i) => {
+        table[i] = false;
+      });
+      table = table.filter((c) => c);
+      table.forEach((c, i) => {
+        c.setTableIndex(i);
+      });
+      while (table.length < 12) {
+        let c = deck.pop();
+        c.setTableIndex(table.length);
+        table.push(c);
+      }
+      selected = [];
+
+      ws.send(
+        JSON.stringify({ action: "setGet", playerId, selected, deck, table })
+      );
     } else {
       console.log("bad");
     }
