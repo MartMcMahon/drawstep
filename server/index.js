@@ -38,8 +38,12 @@ wss.on("connection", (ws) => {
         single(ws, { action: "pong" });
         break;
       case "id":
-        let now = +Date.now().timestamp;
-        gameState.players[msg.player.name] = { ...msg.player, timestamp: now };
+        let now = +Date.now() / 1000;
+        gameState.players[msg.player.name] = {
+          name: msg.player.name,
+          score: msg.player.score || 0,
+          timestamp: now,
+        };
         broadcast({ action: "players", players: gameState.players });
         single(ws, {
           action: "currentGame",
@@ -59,6 +63,7 @@ wss.on("connection", (ws) => {
         break;
       case "setGet":
         let idxs = msg.selected;
+        console.log("updating score for ", msg.playerId);
         let playerId = msg.playerId;
         gameState.players[playerId].score += 1;
         gameState.deck = msg.deck;

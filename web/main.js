@@ -33,9 +33,10 @@ ws.onmessage = (e) => {
       break;
     case "setGot":
       players = msg.players;
-      table = msg.table;
-      deck = msg.deck;
-      ws.send(JSON.stringify({ action: "id", player: { name: playerId } }));
+      table = Table.fromServer(msg.table);
+      deck = Deck.fromServer(msg.deck);
+      selected = [];
+      ws.send(JSON.stringify({ action: "id", player: players[playerId] }));
       break;
 
     // case "table_indexes":
@@ -52,7 +53,7 @@ ws.onopen = (e) => {
   ws.send(
     JSON.stringify({
       action: "id",
-      player: { name: playerId, score: 0 },
+      player: { name: playerId, score: 0, timeStamp: 0 },
     })
   );
 };
