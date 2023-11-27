@@ -22,8 +22,10 @@ class Deck extends Array {
 
   static fromServer(o) {
     let d = new Deck();
+    d.splice(0, o.length);
     o.forEach((c, i) => {
-      d[i] = new Card(c.count, c.color_index, c.fillType, c.shape);
+      let card = new Card(c.count, c.color_index, c.fillType, c.shape, {});
+      d.push(card);
     });
     return d;
   }
