@@ -29,14 +29,23 @@ ws.onmessage = (e) => {
       d = Deck.fromServer(msg.deck);
       table = Table.fromServer(msg.table);
       break;
-    case "table_indexes":
-      // for (let x = 0; x < msg.idxs.length; x++) {
-      msg.idxs.forEach((i) => {
-        let newCard = d.pop();
-        newCard.setTableIndex(i);
-        table[i] = newCard;
-      });
-      selected = [];
+    case "setGet":
+      for (let i =0;i<msg.idxs.length;i++) {
+        table.splice(msg.idxs[i], 1)
+      }
+
+        broadcast({ action: "setGot", idxs, players: gameState.players });
+      players = msg.players;
+      table.
+
+    // case "table_indexes":
+    //   // for (let x = 0; x < msg.idxs.length; x++) {
+    //   msg.idxs.forEach((i) => {
+    //     let newCard = d.pop();
+    //     newCard.setTableIndex(i);
+    //     table[i] = newCard;
+    //   });
+    //   selected = [];
   }
 };
 ws.onopen = (e) => {
@@ -232,7 +241,7 @@ function tableStateUpdate() {
       // cards.forEach(callbackfn)
       trophies.splice(trophies.length, 0, cards);
       // trophies.push(cards[x]);
-      ws.send(JSON.stringify({ action: "score", selected }));
+      ws.send(JSON.stringify({ action: "setGet", selected }));
       // for (let x = 0; x < cards.length; x++) {
       // players[0].score += 1;
       // //////////

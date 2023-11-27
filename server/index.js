@@ -43,9 +43,11 @@ wss.on("connection", (ws) => {
         gameState.table = msg.table;
         broadcast({ action: "newGame", deck: msg.deck, table: msg.table });
         break;
-      case "score":
+      case "setGet":
         let idxs = msg.selected;
-        broadcast({ action: "idxs", idxs });
+        let playerName = msg.playerName;
+        gameState.players[playerName].score += 1;
+        broadcast({ action: "setGot", idxs, players: gameState.players });
         break;
     }
   });
