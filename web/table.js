@@ -2,6 +2,11 @@ import Card from "./card";
 
 class Table extends Array {
   constructor() {
+    // for (let i = 0;i < 12; i++) {
+    //   let c = deck.pop();
+    //   c.setTableIndex(i);
+    //   this.push(c);
+    // }
     super();
   }
 

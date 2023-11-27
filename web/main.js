@@ -7,6 +7,8 @@ import "./style.css";
 let playerId = window.location.search.split("?")[1] || "new";
 let players = {};
 players[playerId] = { name: playerId, score: 0 };
+let deck = new Deck();
+let table = new Table();
 
 ////// connection
 let socketUrl = "ws://localhost:8000";
@@ -16,27 +18,36 @@ ws.onmessage = (e) => {
   let msg = JSON.parse(e.data);
   switch (msg.action) {
     case "newGame":
-      console.log("round trip newGame msg");
+      console.log("round trip newGame msg", msg);
       trophies = [];
-      d = Deck.fromServer(msg.deck);
-      // debugger;
+      deck = Deck.fromServer(msg.deck);
       table = Table.fromServer(msg.table);
+      console.log("received deck with len", deck.length);
       break;
     case "players":
       players = msg.players;
       break;
     case "currentGame":
-      d = Deck.fromServer(msg.deck);
+      deck = Deck.fromServer(msg.deck);
       table = Table.fromServer(msg.table);
       break;
-    case "setGet":
-      for (let i =0;i<msg.idxs.length;i++) {
-        table.splice(msg.idxs[i], 1)
+    case "setGot":
+      msg.idxs.forEach((i) => {
+        table[i] = false;
+      });
+      table = table.filter(c=>c);
+      table.forEach((c,i)=>{
+        c.setTableIndex(i)
+      });
+      while (table.length < 12) {
+        let c = deck.pop();
+        c.setTableIndex(table.length);
+        table.push(c);
       }
-
-        broadcast({ action: "setGot", idxs, players: gameState.players });
+      selected = [];
       players = msg.players;
-      table.
+      ws.send(JSON.stringify({action: "id", player: {name: playerId}}));
+      break;
 
     // case "table_indexes":
     //   // for (let x = 0; x < msg.idxs.length; x++) {
@@ -73,8 +84,6 @@ let ctx = canvas.getContext("2d");
 // let game = new Game();
 
 let buttons = [];
-let d = new Deck();
-let table = new Table();
 let selected = [];
 let trophies = [];
 
@@ -220,7 +229,7 @@ function tableStateUpdate() {
       // cards.forEach(callbackfn)
       trophies.splice(trophies.length, 0, cards);
       // trophies.push(cards[x]);
-      ws.send(JSON.stringify({ action: "setGet", selected }));
+      ws.send(JSON.stringify({ action: "setGet", playerId, selected }));
       // for (let x = 0; x < cards.length; x++) {
       // players[0].score += 1;
       // //////////
@@ -297,35 +306,51 @@ window.addEventListener("mousedown", (e) => {
     if (butt.highlight) {
       if (butt.text === "shuffle") {
         console.log("running shuffle");
-        d = shuffle(d);
+        deck.shuffle();
         return;
       } else if (butt.text === "new game") {
+        deck = new Deck();
+        deck.shuffle();
+        table = new Table();
+        for (let i = 0; i < 12; i++) {
+          let c = deck.pop();
+          c.setTableIndex(i);
+          table.push(c);
+        }
+
         if (ws.readyState === 1) {
-          d = new Deck();
-          d = shuffle(d);
-          for (let i = 0; i < 12; i++) {
-            drawCardToTable(d, table);
-          }
-          ws.send(JSON.stringify({ action: "newGame", deck: d, table }));
+          console.log("sent deck with len", deck.length);
+          ws.send(
+            JSON.stringify({
+              action: "newGame",
+              deck,
+              table,
+            })
+          );
         } else {
           console.log("websocket not ready");
         }
+        // } else if (butt.text === "draw one"){
+
+        // if (ws.readyState)
       } else {
-        console.log("drawing");
-        drawCardToTable(d, table);
+        let c = deck.pop();
+        c.setTableIndex(table.length);
+        table.push(c);
         return;
       }
     }
   });
 });
 
-function drawCardToTable(deck, table) {
-  let c = deck.pop();
-  let x = 120 * (table.length % 3) + 250;
-  let y = 120 * Math.floor(table.length / 3) + 120;
-  c.setPos(x, y);
-  table.push(c);
-}
+// function drawCardToTable() {
+//   let c = deck.pop();
+//   let x = 120 * (table.length % 3) + 250;
+//   let y = 120 * Math.floor(table.length / 3) + 120;
+//   c.setPos(x, y);
+//   c.setT;
+//   table.push(c);
+// }
 
 const PropType = Object.freeze({
   Suit: "shape",
@@ -352,3 +377,14 @@ function isSet(sel) {
     return true;
   });
 }
+
+////// heartbeat
+function heartbeat() {
+  ws.send(
+    JSON.stringify({
+      action: "ping",
+      playerName: playerId,
+    })
+  );
+}
+// setInterval(heartbeat, 3000);

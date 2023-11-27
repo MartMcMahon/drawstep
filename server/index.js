@@ -19,19 +19,28 @@ function single(ws, outgoing) {
   ws.send(JSON.stringify(outgoing));
 }
 
+// if (gameState.players.hasOwnProperty(msg.player.name)) {
+//   if (gameState.players[msg.player.name].timestamp < now - PLAYER_TIMEOUT_SECS) {
+//     delete gameState.players[msg.player.name];
+//   }
+// }
+
 wss.on("connection", (ws) => {
   // ws.send("welcome");
 
   ws.on("message", (msg) => {
     msg = JSON.parse(msg);
-    console.log(`received ${msg}`);
+    // console.log(`received ${msg}`);
 
     switch (msg.action) {
+      case "ping":
+        // single(ws, {action: "currentGame", deck: gameState.deck, table: gameState.table});
+        single(ws, { action: "pong" });
+        break;
       case "id":
-        // let p = gameState.players[msg.player.name] || msg.player;
-        gameState.players[msg.player.name] = msg.player;
+        let now = +Date.now().timestamp();
+        gameState.players[msg.player.name] = { ...msg.player, timestamp: now };
         broadcast({ action: "players", players: gameState.players });
-        console.log(`sending ${gameState.table}`);
         single(ws, {
           action: "currentGame",
           deck: gameState.deck,
@@ -39,14 +48,19 @@ wss.on("connection", (ws) => {
         });
         break;
       case "newGame":
+        console.log("new game msg ", msg.deck.length);
         gameState.deck = msg.deck;
         gameState.table = msg.table;
-        broadcast({ action: "newGame", deck: msg.deck, table: msg.table });
+        broadcast({
+          action: "newGame",
+          deck: gameState.deck,
+          table: gameState.table,
+        });
         break;
       case "setGet":
         let idxs = msg.selected;
-        let playerName = msg.playerName;
-        gameState.players[playerName].score += 1;
+        let playerId = msg.playerId;
+        gameState.players[playerId].score += 1;
         broadcast({ action: "setGot", idxs, players: gameState.players });
         break;
     }
