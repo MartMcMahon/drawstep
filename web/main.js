@@ -169,10 +169,6 @@ function tableStateUpdate() {
         table.push(c);
       }
       selected = [];
-
-      ws.send(
-        JSON.stringify({ action: "setGet", playerId, selected, deck, table })
-      );
     } else {
       console.log("bad");
     }

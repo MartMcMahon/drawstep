@@ -6,7 +6,7 @@ class Card {
   static height = 80;
   static spacer = 25;
   static render_offset = 5;
-  static backgroundColor = "rgba(180, 180, 180, 1)";
+  static backgroundColor = "snow";
 
   constructor(count, color_index, fillType, shape) {
     Object.assign(this, { count, color_index, fillType, shape });
@@ -23,10 +23,6 @@ class Card {
         })
       );
     }
-  }
-
-  static fromServer(o) {
-    return new Card(o.count, o.color_index, o.fillType,o.shape);
   }
 
   setPos(x, y) {
