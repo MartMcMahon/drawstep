@@ -5,73 +5,16 @@ import Table from "./table";
 import "./style.css";
 
 let playerId = window.location.search.split("?")[1] || "new";
-let players = {};
-players[playerId] = { name: playerId, score: 0 };
+let player = { name: playerId, score: 0 };
+
 let deck = new Deck();
 let table = new Table();
-
-////// connection
-let socketUrl = "ws://localhost:8000";
-let ws = new WebSocket(socketUrl);
-console.log(ws);
-ws.onmessage = (e) => {
-  let msg = JSON.parse(e.data);
-  switch (msg.action) {
-    case "newGame":
-      console.log("round trip newGame msg", msg);
-      trophies = [];
-      deck = Deck.fromServer(msg.deck);
-      table = Table.fromServer(msg.table);
-      console.log("received deck with len", deck.length);
-      break;
-    case "players":
-      players = msg.players;
-      break;
-    case "currentGame":
-      deck = Deck.fromServer(msg.deck);
-      table = Table.fromServer(msg.table);
-      break;
-    case "setGot":
-      players = msg.players;
-      table = Table.fromServer(msg.table);
-      deck = Deck.fromServer(msg.deck);
-      selected = [];
-      ws.send(JSON.stringify({ action: "id", player: players[playerId] }));
-      break;
-
-    // case "table_indexes":
-    //   // for (let x = 0; x < msg.idxs.length; x++) {
-    //   msg.idxs.forEach((i) => {
-    //     let newCard = d.pop();
-    //     newCard.setTableIndex(i);
-    //     table[i] = newCard;
-    //   });
-    //   selected = [];
-  }
-};
-ws.onopen = (e) => {
-  ws.send(
-    JSON.stringify({
-      action: "id",
-      player: { name: playerId, score: 0, timeStamp: 0 },
-    })
-  );
-};
 
 let canvas = document.createElement("canvas");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 document.querySelector("#app").appendChild(canvas);
 let ctx = canvas.getContext("2d");
-
-// class Game {
-//   constructor() {
-//     this.deck = new Deck();
-//     this.score = 0;
-//     this.selected = [];
-//   }
-// }
-// let game = new Game();
 
 let buttons = [];
 let selected = [];
@@ -121,9 +64,6 @@ buttons = [
 ];
 
 function update(secondsPassed) {
-  // Use time to calculate new position
-  // rectX += (movingSpeed * secondsPassed);
-  // rectY += (movingSpeed * secondsPassed);
   frameRate = 1 / secondsPassed;
 }
 
@@ -142,28 +82,26 @@ function draw() {
   ctx.fillStyle = "rgba(200, 200, 200, 1)";
   ctx.fill();
 
-  Object.values(players).forEach((player, i) => {
-    ctx.beginPath();
-    let playerBoxPos = {
-      x: canvas.width - 200 + 5,
-      y: canvas.height / 4 + 5 + i * 30,
-    };
-    ctx.rect(playerBoxPos.x, playerBoxPos.y, 175, 50);
-    ctx.closePath();
-    ctx.strokeStyle = colors.grey;
-    ctx.stroke();
-    ctx.fillStyle = "rgba(150, 105, 150, 1)";
-    ctx.fill();
-    ctx.beginPath();
-    ctx.font = "24px Helvetica";
-    ctx.fillStyle = "black";
-    ctx.fillText(
-      `${player.name}: ${player.score}`,
-      playerBoxPos.x + 5,
-      playerBoxPos.y + 5 + 24
-    );
-    ctx.closePath();
-  });
+  ctx.beginPath();
+  let playerBoxPos = {
+    x: canvas.width - 200 + 5,
+    y: canvas.height / 4 + 5 * 30,
+  };
+  ctx.rect(playerBoxPos.x, playerBoxPos.y, 175, 50);
+  ctx.closePath();
+  ctx.strokeStyle = colors.grey;
+  ctx.stroke();
+  ctx.fillStyle = "rgba(150, 105, 150, 1)";
+  ctx.fill();
+  ctx.beginPath();
+  ctx.font = "24px Helvetica";
+  ctx.fillStyle = "black";
+  ctx.fillText(
+    `${player.name}: ${player.score}`,
+    playerBoxPos.x + 5,
+    playerBoxPos.y + 5 + 24
+  );
+  ctx.closePath();
 
   buttons.forEach((butt) => {
     if (butt.highlight) {
@@ -313,22 +251,6 @@ window.addEventListener("mousedown", (e) => {
           c.setTableIndex(i);
           table.push(c);
         }
-
-        if (ws.readyState === 1) {
-          console.log("sent deck with len", deck.length);
-          ws.send(
-            JSON.stringify({
-              action: "newGame",
-              deck,
-              table,
-            })
-          );
-        } else {
-          console.log("websocket not ready");
-        }
-        // } else if (butt.text === "draw one"){
-
-        // if (ws.readyState)
       } else {
         let c = deck.pop();
         c.setTableIndex(table.length);
@@ -338,15 +260,6 @@ window.addEventListener("mousedown", (e) => {
     }
   });
 });
-
-// function drawCardToTable() {
-//   let c = deck.pop();
-//   let x = 120 * (table.length % 3) + 250;
-//   let y = 120 * Math.floor(table.length / 3) + 120;
-//   c.setPos(x, y);
-//   c.setT;
-//   table.push(c);
-// }
 
 const PropType = Object.freeze({
   Suit: "shape",
@@ -373,14 +286,3 @@ function isSet(sel) {
     return true;
   });
 }
-
-////// heartbeat
-function heartbeat() {
-  ws.send(
-    JSON.stringify({
-      action: "ping",
-      playerName: playerId,
-    })
-  );
-}
-// setInterval(heartbeat, 3000);
