@@ -1,6 +1,7 @@
 import Card from "./card";
 import { FillType, ShapeType } from "./shape";
 import colors from "./colors";
+import RNG from "./rng";
 
 class Deck extends Array {
   constructor() {
@@ -11,13 +12,14 @@ class Deck extends Array {
           [1, 2, 3].forEach((count) => {
             let card = new Card(count, c_index, fillType, shapeType, {});
             card.setPos(-100, -100);
-            // card.draw(ctx);
             this.push(card);
           });
         });
       });
     });
     this.backface = Card.Back;
+
+    this.rng = new RNG(13);
   }
 
   static fromServer(o) {
@@ -68,7 +70,7 @@ class Deck extends Array {
     // While there remain elements to shuffle…
     while (m) {
       // Pick a remaining element…
-      i = Math.floor(Math.random() * m--);
+      i = Math.floor(this.rng.random() * m--);
 
       // And swap it with the current element.
       t = this[m];

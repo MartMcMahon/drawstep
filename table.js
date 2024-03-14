@@ -17,7 +17,6 @@ class Table extends Array {
       t.push(card);
       card.setTableIndex(i);
     });
-    // debugger;
     return t;
   }
 

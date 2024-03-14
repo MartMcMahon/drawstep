@@ -34,8 +34,8 @@ class Card {
   }
 
   setTableIndex(i) {
-    let x = 120 * (i % 3) + 250;
-    let y = 120 * Math.floor(i / 3) + 120;
+    let x = (Card.width + Card.spacer + 10) * (i % 3) + 60;
+    let y = (Card.height + Card.spacer) * Math.floor(i / 3) + 120;
     this.setPos(x, y);
   }
 

@@ -26,6 +26,9 @@ let frameRate = 0;
 
 let mousePos = { x: 0, y: 0 };
 
+let numSets = 0;
+let debug_sets = [];
+
 function gameLoop(timeStamp) {
   secondsPassed = (timeStamp - oldTimeStamp) / 1000;
   oldTimeStamp = timeStamp;
@@ -122,11 +125,13 @@ function draw() {
 
     ctx.beginPath();
     ctx.fillStyle = "red";
-    ctx.font = "24px Helvetica";
+    ctx.font = "32px Helvetica";
     ctx.fillText(butt.text, butt.x + 5, butt.y + 5 + 24);
     ctx.closePath();
-    drawTime(ctx);
   });
+
+  drawTime(ctx);
+  drawMessage();
 }
 
 function drawTime(ctx) {
@@ -144,6 +149,16 @@ function drawTime(ctx) {
   );
   ctx.fillText("score: " + trophies.length, canvas.width - 100, 75);
   ctx.fillText("selected: " + selected, canvas.width - 400, 100);
+  ctx.restore();
+}
+
+function drawMessage() {
+  ctx.save();
+  ctx.beginPath();
+  ctx.fillStyle = "black";
+  ctx.font = "32px Verdana";
+  ctx.fillText(`there are/is ${numSets} set(s)`, canvas.width / 2 - 100, 50);
+  ctx.closePath();
   ctx.restore();
 }
 
@@ -239,14 +254,23 @@ window.addEventListener("mousedown", (e) => {
         deck.shuffle();
         return;
       } else if (butt.text === "new game") {
-        deck = new Deck();
-        deck.shuffle();
-        table = new Table();
-        for (let i = 0; i < 12; i++) {
-          let c = deck.pop();
-          c.setTableIndex(i);
-          table.push(c);
+        get12();
+        numSets = verify12();
+        while (numSets === 0) {
+          get12();
+          debug_sets = [];
+          numSets = verify12();
         }
+        console.log("numSets: ", numSets);
+        console.log("sets: ", debug_sets);
+        // deck = new Deck();
+        // deck.shuffle();
+        // table = new Table();
+        // for (let i = 0; i < 12; i++) {
+        //   let c = deck.pop();
+        //   c.setTableIndex(i);
+        //   table.push(c);
+        // }
       } else {
         let c = deck.pop();
         c.setTableIndex(table.length);
@@ -256,6 +280,35 @@ window.addEventListener("mousedown", (e) => {
     }
   });
 });
+
+function get12() {
+  deck = new Deck();
+  deck.shuffle();
+  table = new Table();
+  for (let i = 0; i < 12; i++) {
+    let c = deck.pop();
+    c.setTableIndex(i);
+    table.push(c);
+  }
+}
+
+function verify12() {
+  let numSets = 0;
+  for (let i = 0; i < 12; i++) {
+    for (let j = i; j < 12; j++) {
+      for (let k = j; k < 12; k++) {
+        if (i === j || i === k || j === k) {
+          continue;
+        }
+        if (isSet([table[i], table[j], table[k]])) {
+          numSets++;
+          debug_sets.push([i, j, k]);
+        }
+      }
+    }
+  }
+  return numSets;
+}
 
 const PropType = Object.freeze({
   Suit: "shape",
