@@ -255,7 +255,7 @@ function tableStateUpdate() {
   }
 }
 
-window.addEventListener("mousemove", (e) => {
+function mouseMove(e) {
   table.forEach((card, i) => {
     mousePos.x = e.x;
     mousePos.y = e.y;
@@ -283,18 +283,15 @@ window.addEventListener("mousemove", (e) => {
       butt.highlight = false;
     }
   });
+}
+window.addEventListener("mousemove", (_e) => {
+  mouseMove(_e);
+});
+window.addEventListener("touchmove", (_e) => {
+  mouseMove(_e);
 });
 
-window.addEventListener("mousedown", (e) => {
-  // if (selected.length > 3) {
-  //   let removed = selected.splice(0, selected.length - 3);
-  //   removed.forEach(card => {
-  //     card.selected = false;
-  //   })
-  //   return;
-  // } else if (selected.length === 3) {
-  //   return;
-  // }
+function mouseDown(e) {
   table.forEach((card, idx) => {
     if (card.highlight) {
       if (!card.selected) {
@@ -309,40 +306,13 @@ window.addEventListener("mousedown", (e) => {
       }
     }
   });
-
   tableStateUpdate();
-
-  // buttons.forEach((butt) => {
-  //   if (butt.highlight) {
-  //     if (butt.text === "shuffle") {
-  //       console.log("running shuffle");
-  //       deck.shuffle();
-  //       return;
-  //     } else if (butt.text === "new game") {
-  //       get12();
-  //       numSets = verify12();
-  //       while (numSets === 0) {
-  //         get12();
-  //         trophies = {};
-  //         numSets = verify12();
-  //       }
-  //       console.log("numSets: ", numSets);
-  //       // deck = new Deck();
-  //       // deck.shuffle();
-  //       // table = new Table();
-  //       // for (let i = 0; i < 12; i++) {
-  //       //   let c = deck.pop();
-  //       //   c.setTableIndex(i);
-  //       //   table.push(c);
-  //       // }
-  //     } else {
-  //       let c = deck.pop();
-  //       c.setTableIndex(table.length);
-  //       table.push(c);
-  //       return;
-  //     }
-  //   }
-  // });
+}
+window.addEventListener("mousedown", (_e) => {
+  mouseDown(_e);
+});
+window.addEventListener("touchstart", (_e) => {
+  mouseDown(_e);
 });
 
 function newGame() {
