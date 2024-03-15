@@ -18,7 +18,7 @@ let ctx = canvas.getContext("2d");
 
 let buttons = [];
 let selected = [];
-let trophies = [];
+let trophies = {};
 
 let secondsPassed = 0;
 let oldTimeStamp = 0;
@@ -27,7 +27,7 @@ let frameRate = 0;
 let mousePos = { x: 0, y: 0 };
 
 let numSets = 0;
-let debug_sets = [];
+// let answer_sets = [];
 
 function gameLoop(timeStamp) {
   secondsPassed = (timeStamp - oldTimeStamp) / 1000;
@@ -78,7 +78,12 @@ function draw() {
 
   // draw ui
   ctx.beginPath();
-  ctx.rect(canvas.width - 200, canvas.height / 4, 200, 200);
+  ctx.rect(
+    canvas.width - 200,
+    canvas.height / 4 - 100,
+    (Card.width + 3) * 3,
+    (Card.height + 2) * numSets
+  );
   ctx.closePath();
   ctx.strokeStyle = "black";
   ctx.stroke();
@@ -88,23 +93,19 @@ function draw() {
   ctx.beginPath();
   let playerBoxPos = {
     x: canvas.width - 200 + 5,
-    y: canvas.height / 4 + 5 * 30,
+    y: canvas.height / 4,
   };
-  ctx.rect(playerBoxPos.x, playerBoxPos.y, 175, 50);
-  ctx.closePath();
-  ctx.strokeStyle = colors.grey;
-  ctx.stroke();
-  ctx.fillStyle = "rgba(150, 105, 150, 1)";
-  ctx.fill();
-  ctx.beginPath();
-  ctx.font = "24px Helvetica";
-  ctx.fillStyle = "black";
-  ctx.fillText(
-    `${player.name}: ${player.score}`,
-    playerBoxPos.x + 5,
-    playerBoxPos.y + 5 + 24
-  );
-  ctx.closePath();
+  Object.entries(trophies).forEach(([k, v], e) => {
+    if (v) {
+      k.split(",").forEach((i) => {
+        let card = table[i].clone();
+        card.setPos(playerBoxPos.x, playerBoxPos.y + e * Card.height + 2 * e);
+        card.draw(ctx);
+        playerBoxPos.x += Card.width + 3;
+      });
+    }
+    playerBoxPos.x = canvas.width - 200 + 5;
+  });
 
   buttons.forEach((butt) => {
     if (butt.highlight) {
@@ -157,7 +158,7 @@ function drawMessage() {
   ctx.beginPath();
   ctx.fillStyle = "black";
   ctx.font = "32px Verdana";
-  ctx.fillText(`there are/is ${numSets} set(s)`, canvas.width / 2 - 100, 50);
+  ctx.fillText(`there is/are ${numSets} set(s)`, canvas.width / 2 - 100, 50);
   ctx.closePath();
   ctx.restore();
 }
@@ -169,20 +170,22 @@ function tableStateUpdate() {
     });
     if (isSet(cards)) {
       console.log("a set!");
-      trophies.splice(trophies.length, 0, cards);
+      trophies[selected.sort((a, b) => a - b)] = true;
+      console.log("trophies: ", trophies);
+      // trophies.splice(trophies.length, 0, cards);
+      // selected.forEach((i) => {
+      //   table[i] = false;
+      // });
 
-      selected.forEach((i) => {
-        table[i] = false;
-      });
-      table = table.filter((c) => c);
-      table.forEach((c, i) => {
-        c.setTableIndex(i);
-      });
-      while (table.length < 12) {
-        let c = deck.pop();
-        c.setTableIndex(table.length);
-        table.push(c);
-      }
+      // table = table.filter((c) => c);
+      // table.forEach((c, i) => {
+      //   c.setTableIndex(i);
+      // });
+      // while (table.length < 12) {
+      //   let c = deck.pop();
+      //   c.setTableIndex(table.length);
+      //   table.push(c);
+      // }
       selected = [];
     } else {
       console.log("bad");
@@ -258,11 +261,10 @@ window.addEventListener("mousedown", (e) => {
         numSets = verify12();
         while (numSets === 0) {
           get12();
-          debug_sets = [];
+          trophies = {};
           numSets = verify12();
         }
         console.log("numSets: ", numSets);
-        console.log("sets: ", debug_sets);
         // deck = new Deck();
         // deck.shuffle();
         // table = new Table();
@@ -302,7 +304,8 @@ function verify12() {
         }
         if (isSet([table[i], table[j], table[k]])) {
           numSets++;
-          debug_sets.push([i, j, k]);
+          trophies[[i, j, k].sort((a, b) => a - b)] = false;
+          // answer_sets.push([i, j, k]);
         }
       }
     }

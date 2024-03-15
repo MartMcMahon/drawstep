@@ -25,6 +25,10 @@ class Card {
     }
   }
 
+  clone() {
+    return new Card(this.count, this.color_index, this.fillType, this.shape);
+  }
+
   setPos(x, y) {
     Object.assign(this, { x, y });
     this.shapeSprites.forEach((shape, i) => {
