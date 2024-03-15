@@ -19,6 +19,14 @@ canvas.height = window.innerHeight;
 document.querySelector("#app").appendChild(canvas);
 let ctx = canvas.getContext("2d");
 
+let isPortrait = false;
+if (canvas.width <= 450) {
+  isPortrait = true;
+  canvas.height = window.innerHeight * 2;
+}
+
+console.log("window.innerWidth: ", window.innerWidth);
+
 let buttons = [];
 let selected = [];
 let trophies = {};
@@ -97,6 +105,10 @@ function draw() {
     x: canvas.width - 195,
     y: canvas.height / 4 - 100,
   };
+  if (isPortrait) {
+    playerBoxPos.x = canvas.width - 195;
+    playerBoxPos.y = (Card.height + 20) * 4 + 200;
+  }
   ctx.beginPath();
   ctx.rect(
     playerBoxPos.x,
@@ -188,12 +200,16 @@ function draw() {
     ctx.beginPath();
     ctx.fillStyle = "black";
     ctx.font = "40px Verdana";
-    ctx.fillText(
-      `You won in ${(winTime - startTime) / 1000} seconds!`,
-      200,
-      200
-    );
-
+    if (isPortrait) {
+      ctx.fillText(`You won in`, 110, 130);
+      ctx.fillText(`${(winTime - startTime) / 1000} seconds!`, 110, 170);
+    } else {
+      ctx.fillText(
+        `You won in ${(winTime - startTime) / 1000} seconds!`,
+        100,
+        150
+      );
+    }
     ctx.fill();
     ctx.restore();
   }
@@ -373,7 +389,6 @@ function isSet(sel) {
     });
 
     if (matchSum % 3 !== 0) {
-      console.log("matchSum for " + propType + " is " + matchSum);
       return false;
     }
     return true;
