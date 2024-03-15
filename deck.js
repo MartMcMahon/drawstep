@@ -4,7 +4,7 @@ import colors from "./colors";
 import RNG from "./rng";
 
 class Deck extends Array {
-  constructor() {
+  constructor(seed) {
     super();
     colors.forEach((color, c_index) => {
       Object.values(ShapeType).forEach((shapeType) => {
@@ -19,7 +19,7 @@ class Deck extends Array {
     });
     this.backface = Card.Back;
 
-    this.rng = new RNG(13);
+    this.rng = new RNG(seed);
   }
 
   static fromServer(o) {
