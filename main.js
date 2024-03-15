@@ -303,9 +303,13 @@ function mouseMove(e) {
 window.addEventListener("mousemove", (_e) => {
   mouseMove(_e);
 });
-window.addEventListener("touchmove", (_e) => {
-  mouseMove(_e);
-});
+canvas.addEventListener(
+  "touchmove",
+  (_e) => {
+    mouseMove(_e);
+  },
+  false
+);
 
 function mouseDown(e) {
   table.forEach((card, idx) => {
@@ -327,9 +331,13 @@ function mouseDown(e) {
 window.addEventListener("mousedown", (_e) => {
   mouseDown(_e);
 });
-window.addEventListener("touchstart", (_e) => {
-  mouseDown(_e);
-});
+canvas.addEventListener(
+  "touchstart",
+  (_e) => {
+    mouseDown(_e);
+  },
+  false
+);
 
 function newGame() {
   get12();
